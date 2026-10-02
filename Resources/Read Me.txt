@@ -1,0 +1,34 @@
+ThreeFinger
+
+Three-finger trackpad gestures for music and video:
+
+  Tap with three fingers                  Play or pause
+  Swipe up or down with three fingers     Volume up or down
+  Swipe left or right with three fingers  Previous or next track
+
+
+Installing
+
+1. Drag ThreeFinger onto the Applications folder in this window.
+
+2. Open ThreeFinger from Applications. Because it isn't from the App Store,
+   macOS stops it the first time:
+   - macOS 15 or later: click Done, then open System Settings >
+     Privacy & Security, scroll down and click Open Anyway next to
+     ThreeFinger.
+   - macOS 13 or 14: Control-click ThreeFinger, choose Open, then click Open.
+
+3. When macOS asks, allow ThreeFinger in System Settings >
+   Privacy & Security > Accessibility. It needs this to press the media keys.
+
+
+Using it
+
+Click the hand icon in the menu bar for settings. If a three-finger swipe also
+opens Mission Control or drags windows, the panel shows which macOS setting
+to change.
+
+To hide the icon, turn off Show in menu bar. Opening ThreeFinger again brings
+the panel back.
+
+Needs macOS 13 or later.
