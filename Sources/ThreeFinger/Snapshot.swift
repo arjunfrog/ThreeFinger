@@ -11,10 +11,10 @@ enum Snapshot {
             ("clean", true, [], nil),
             ("issues", false, [.threeFingerDrag, .missionControl], .swipeLeft),
         ]
-        for (name, canSendKeys, conflicts, gesture) in states {
+        for (name, hasAccess, conflicts, gesture) in states {
             for appearance in [NSAppearance.Name.aqua, .darkAqua] {
                 let model = AppModel()
-                model.preview(canSendKeys: canSendKeys, conflicts: conflicts, lastGesture: gesture)
+                model.preview(hasAccess: hasAccess, conflicts: conflicts, lastGesture: gesture)
                 let suffix = appearance == .aqua ? "light" : "dark"
                 render(SettingsView(model: model), appearance: appearance, to: "\(directory)/\(name)-\(suffix).png")
             }

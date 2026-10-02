@@ -37,8 +37,14 @@ final class TouchListener {
             }
         }
 
+        ScrollBlocker.shared.setFingerCount(points.count)
+
         lock.lock()
-        let gestures = recognizers[device, default: GestureRecognizer()].process(points, at: timestamp)
+        if recognizers[device] == nil {
+            let height = MTListenerDeviceHeight(device)
+            recognizers[device] = height > 0 ? GestureRecognizer(trackpadHeight: height) : GestureRecognizer()
+        }
+        let gestures = recognizers[device]!.process(points, at: timestamp)
         lock.unlock()
 
         for gesture in gestures {

@@ -5,7 +5,7 @@ A menu bar app that adds three-finger trackpad gestures for media:
 | Gesture | Does |
 | --- | --- |
 | Tap with three fingers | Play or pause |
-| Swipe up or down with three fingers | Volume up or down, one step per ~1 cm |
+| Swipe up or down with three fingers | Volume up or down, one notch per 2.5 mm, gliding smoothly |
 | Swipe left or right with three fingers | Previous or next track |
 
 It sends the same events as the media keys on an Apple keyboard, so it works with

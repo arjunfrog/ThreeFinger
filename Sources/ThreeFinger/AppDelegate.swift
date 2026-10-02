@@ -22,11 +22,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
             Task { @MainActor in AppModel.shared.refreshStatus() }
         }
 
-        if !launchedAtLogin || !model.canSendKeys || model.trackpadUnavailable {
+        if !launchedAtLogin || !model.hasAccess || model.trackpadUnavailable {
             showPanel()
         }
         // macOS only shows this prompt if it hasn't asked before.
-        if !model.canSendKeys {
+        if !model.hasAccess {
             CGRequestPostEventAccess()
         }
     }

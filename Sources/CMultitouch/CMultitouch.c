@@ -34,6 +34,7 @@ static void (*pRegister)(MTDeviceRef, MTContactCallback);
 static void (*pUnregister)(MTDeviceRef, MTContactCallback);
 static void (*pStart)(MTDeviceRef, int32_t);
 static void (*pStop)(MTDeviceRef);
+static int (*pGetDimensions)(MTDeviceRef, int32_t *, int32_t *); // Optional.
 
 static CFArrayRef gDevices;
 static MTFrameHandler gHandler;
@@ -57,6 +58,7 @@ static bool loadFramework(void) {
     pUnregister = unregisterCallback;
     pStart = start;
     pStop = stop;
+    pGetDimensions = dlsym(lib, "MTDeviceGetSensorSurfaceDimensions");
     pCreateList = createList;
     return true;
 }
@@ -104,4 +106,10 @@ void MTListenerStop(void) {
     }
     CFRelease(gDevices);
     gDevices = NULL;
+}
+
+float MTListenerDeviceHeight(uintptr_t device) {
+    int32_t width = 0, height = 0;
+    if (!pGetDimensions || pGetDimensions((MTDeviceRef)device, &width, &height) != 0 || height <= 0) return 0;
+    return height / 100.0f; // Reported in hundredths of a millimetre.
 }

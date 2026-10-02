@@ -10,17 +10,19 @@ enum MediaKey: Int32 {
     case next = 19        // NX_KEYTYPE_FAST, what F9 sends
     case previous = 20    // NX_KEYTYPE_REWIND, what F7 sends
 
-    func press() {
-        post(keyDown: true)
-        post(keyDown: false)
+    /// With `quarterStep`, volume keys move a quarter of a normal step, as Option-Shift does on a keyboard.
+    func press(quarterStep: Bool = false) {
+        let modifiers: NSEvent.ModifierFlags = quarterStep ? [.option, .shift] : []
+        post(keyDown: true, modifiers: modifiers)
+        post(keyDown: false, modifiers: modifiers)
     }
 
-    private func post(keyDown: Bool) {
+    private func post(keyDown: Bool, modifiers: NSEvent.ModifierFlags) {
         let state = keyDown ? 0xA : 0xB
         let event = NSEvent.otherEvent(
             with: .systemDefined,
             location: .zero,
-            modifierFlags: NSEvent.ModifierFlags(rawValue: UInt(state << 8)),
+            modifierFlags: NSEvent.ModifierFlags(rawValue: UInt(state << 8)).union(modifiers),
             timestamp: 0,
             windowNumber: 0,
             context: nil,

@@ -1,13 +1,14 @@
-enum Gesture {
-    case tap, swipeUp, swipeDown, swipeLeft, swipeRight
+enum Gesture: Equatable {
+    case tap, swipeLeft, swipeRight
+    /// Quarter volume steps (1/64 of the range). Positive is up.
+    case volume(steps: Int)
 
     var name: String {
         switch self {
         case .tap: "Tap"
-        case .swipeUp: "Swipe up"
-        case .swipeDown: "Swipe down"
         case .swipeLeft: "Swipe left"
         case .swipeRight: "Swipe right"
+        case .volume(let steps): steps > 0 ? "Swipe up" : "Swipe down"
         }
     }
 }
@@ -28,8 +29,19 @@ struct GestureRecognizer {
     static let axisLockDistance: Float = 0.04
     // Left and right fire once per swipe.
     static let trackSwipeDistance: Float = 0.12
-    // Up and down fire once per step, so a longer swipe changes the volume more.
-    static let volumeStepDistance: Float = 0.07
+
+    // Volume follows the fingers: one notch of the 16 in the volume overlay per 2.5 mm,
+    // sent as quarter steps so it glides instead of jumping.
+    static let notchDistance: Float = 2.5 // millimetres
+    static let stepsPerNotch: Float = 4
+
+    /// Height of the touch surface in millimetres, so distances are real on any trackpad.
+    /// The default is roughly a MacBook trackpad, for when the device doesn't report its size.
+    private let trackpadHeight: Float
+
+    init(trackpadHeight: Float = 75) {
+        self.trackpadHeight = trackpadHeight
+    }
 
     private enum Axis { case horizontal, vertical }
 
@@ -41,12 +53,14 @@ struct GestureRecognizer {
     private var anchorIDs: Set<Int32> = []
     private var axis: Axis?
     private var didSwipe = false
+    private var lastCenter: SIMD2<Float>?
+    private var volumeRemainder: Float = 0
 
     mutating func process(_ touches: [Touch], at time: Double) -> [Gesture] {
         guard !touches.isEmpty else {
             let isTap = maxFingers == 3 && !didSwipe && maxTravel <= Self.tapMaxTravel
                 && time - (touchStart ?? time) <= Self.tapMaxDuration
-            self = GestureRecognizer()
+            self = GestureRecognizer(trackpadHeight: trackpadHeight)
             return isTap ? [.tap] : []
         }
 
@@ -71,6 +85,7 @@ struct GestureRecognizer {
         guard let anchor, ids == anchorIDs else {
             self.anchor = center
             anchorIDs = ids
+            lastCenter = nil
             return []
         }
 
@@ -86,11 +101,15 @@ struct GestureRecognizer {
             didSwipe = true
             return [delta.x > 0 ? .swipeRight : .swipeLeft]
         case .vertical:
-            guard abs(delta.y) >= Self.volumeStepDistance else { return [] }
             didSwipe = true
-            let up = delta.y > 0
-            self.anchor!.y += up ? Self.volumeStepDistance : -Self.volumeStepDistance
-            return [up ? .swipeUp : .swipeDown]
+            // On the frame the axis locks, this counts all the movement since the fingers settled.
+            let dy = center.y - (lastCenter ?? anchor).y
+            lastCenter = center
+            volumeRemainder += dy * trackpadHeight / Self.notchDistance * Self.stepsPerNotch
+            let steps = Int(volumeRemainder)
+            guard steps != 0 else { return [] }
+            volumeRemainder -= Float(steps)
+            return [.volume(steps: steps)]
         }
     }
 }

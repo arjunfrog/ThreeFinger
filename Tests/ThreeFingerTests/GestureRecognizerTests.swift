@@ -5,8 +5,10 @@ struct GestureRecognizerTests {
     private let frameInterval = 1.0 / 90
 
     /// Puts fingers down, slides them by (dx, dy) over `frames` frames, then lifts them.
-    private func gesture(fingers: Int = 3, dx: Float = 0, dy: Float = 0, frames: Int = 20) -> [Gesture] {
-        var recognizer = GestureRecognizer()
+    private func gesture(
+        fingers: Int = 3, dx: Float = 0, dy: Float = 0, frames: Int = 20, trackpadHeight: Float = 75
+    ) -> [Gesture] {
+        var recognizer = GestureRecognizer(trackpadHeight: trackpadHeight)
         var results: [Gesture] = []
         var time = 0.0
         for frame in 0...frames {
@@ -36,13 +38,45 @@ struct GestureRecognizerTests {
         #expect(gesture(dx: -0.4) == [.swipeLeft])
     }
 
-    @Test func testLongerSwipeUpRaisesVolumeMore() {
-        #expect(gesture(dy: 0.15) == [.swipeUp, .swipeUp])
-        #expect(gesture(dy: 0.3) == [.swipeUp, .swipeUp, .swipeUp, .swipeUp])
+    /// Net quarter volume steps from a gesture.
+    private func volumeSteps(_ gestures: [Gesture]) -> Int {
+        gestures.reduce(0) { total, gesture in
+            if case .volume(let steps) = gesture { total + steps } else { total }
+        }
     }
 
-    @Test func testSwipeDownLowersVolume() {
-        #expect(gesture(dy: -0.15) == [.swipeDown, .swipeDown])
+    @Test func testSwipeUpRaisesVolumeAndDownLowersIt() {
+        #expect(volumeSteps(gesture(dy: 0.3)) > 0)
+        #expect(volumeSteps(gesture(dy: -0.3)) < 0)
+        #expect(!gesture(dy: 0.3).contains(.tap))
+    }
+
+    /// Normalized distance on the default 75 mm trackpad.
+    private func millimetres(_ mm: Float) -> Float { mm / 75 }
+
+    @Test func testEachTwoAndAHalfMillimetresIsOneNotch() {
+        // A notch is four quarter steps. Under 3 mm isn't a swipe yet, so a tap can wobble.
+        #expect(volumeSteps(gesture(dy: millimetres(2.6))) == 0)
+        #expect(volumeSteps(gesture(dy: millimetres(5.1))) == 8)
+        #expect(volumeSteps(gesture(dy: millimetres(10.2))) == 16)
+        #expect(volumeSteps(gesture(dy: millimetres(-5.1))) == -8)
+    }
+
+    @Test func testSpeedDoesNotChangeTheAmount() {
+        #expect(volumeSteps(gesture(dy: millimetres(10.2), frames: 180)) == 16)
+        #expect(volumeSteps(gesture(dy: millimetres(10.2), frames: 10)) == 16)
+    }
+
+    @Test func testDistancesAreRealOnABiggerTrackpad() {
+        // The same 10 mm is a smaller share of a 150 mm trackpad's height.
+        #expect(volumeSteps(gesture(dy: 10.2 / 150, trackpadHeight: 150)) == 16)
+    }
+
+    @Test func testVolumeGlidesInQuarterSteps() {
+        // The first change catches up the movement made before the swipe was known to be vertical.
+        let gestures = gesture(dy: millimetres(10.2), frames: 80).dropFirst()
+        #expect(gestures.count > 8)
+        #expect(gestures.allSatisfy { $0 == .volume(steps: 1) })
     }
 
     @Test func testShortSlideDoesNothing() {

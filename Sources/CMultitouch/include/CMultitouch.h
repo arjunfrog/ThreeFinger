@@ -17,3 +17,6 @@ typedef void (*MTFrameHandler)(uintptr_t device, const MTTouchPoint *touches, in
 int32_t MTListenerStart(MTFrameHandler handler);
 
 void MTListenerStop(void);
+
+/// The height of a device's touch surface in millimetres, or 0 if it isn't known.
+float MTListenerDeviceHeight(uintptr_t device);

@@ -19,10 +19,10 @@ struct SettingsView: View {
                             detail: "This version of macOS didn't load the multitouch framework, so gestures won't work."
                         )
                     }
-                    if !model.canSendKeys {
+                    if !model.hasAccess {
                         IssueRow(
-                            title: "Allow ThreeFinger to press media keys",
-                            detail: "Turn on ThreeFinger in Privacy & Security > Accessibility.",
+                            title: "Allow ThreeFinger in Accessibility",
+                            detail: "It needs this to press media keys and keep the screen still while you swipe.",
                             button: "Allow…",
                             action: model.requestKeyAccess
                         )
